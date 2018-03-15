@@ -48,7 +48,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-print('Peter Edmonds: AutoVHLv1.4\n USE AT YOUR OWN RISK!')
+print('Peter Edmonds: AutoVHLv1.5\n USE AT YOUR OWN RISK!')
 
 while True:
     username = input("enter your username: ")
@@ -62,7 +62,7 @@ while True:
         pass
 
 # start browser
-browser = webdriver.Chrome(executable_path=resource_path('chromedriver.exe'))
+browser = webdriver.Chrome(executable_path=resource_path('chromedriver'))
 
 # go to vhl home
 get_page("https://www.vhlcentral.com/home")
@@ -172,7 +172,7 @@ for assignment_number in range(11):
         # load assignment page
         get_page(hw_urls[assignment_number])
 
-        # if assignment is a multi assignemnt
+        # if assignment is a multi assignment
         if check_element_existence(
                 '//form[contains(@name, "RecitalForm")]//input[contains(@type, "text")]') and check_element_existence(
                 '//form[contains(@name, "RecitalForm")]//input[contains(@type, "radio")]'):
@@ -190,12 +190,21 @@ for assignment_number in range(11):
                     select.select_by_visible_text(answers_book[assignment_number][question])
                 elif current_input.tag_name == 'input':
                     if current_input.get_attribute('type') == 'radio':
-                        print('question' + str(question) + 'is a button')
+                        print('question ' + str(question) + 'is a button')
+                        input_parent = current_input.find_element_by_xpath("./..")
+                        input_label = input_parent.find_element_by_xpath("./label/span").text
+                        print(input_label)
                         if check_element_existence(
-                        '//form[contains(@name, "RecitalForm")]//input[contains(@type, "radio")]') and check_element_existence(
-                        '//label/span[contains(text(),"cierto")]') and check_element_existence(
-                        '//label/span[contains(text(),"falso")]'):
-                            print('question ' + str(question) + ' is a true / false')
+                            '//form[contains(@name, "RecitalForm")]//input[contains(@type, "radio")]') and\
+                                input_label == 'cierto' or input_label == 'falso':
+                                    print('question ' + str(question) + ' is a true / false')
+                                    if input_label == answers_book[assignment_number][question]:
+                                        current_input.click()
+                                    else:
+                                        current_input.send_keys(Keys.ARROW_DOWN)
+                                        current_input = browser.switch_to.active_element
+                                        current_input.click()
+
                         else:
                             # answer as a normal button
                             print('question ' + str(question) + ' is a normal button')
@@ -245,7 +254,7 @@ for assignment_number in range(11):
         elif check_element_existence(
                 '//form[contains(@name, "RecitalForm")]//input[contains(@type, "radio")]') and check_element_existence(
             '//label/span[contains(text(),"cierto")]') and check_element_existence(
-            '//label/span[contains(text(),"falso")]'):
+                '//label/span[contains(text(),"falso")]'):
             print(str(assignment_number) + '= true / false')
             options = browser.find_elements_by_xpath('//label/span')
             for question in range(len(answers_book[assignment_number])):
